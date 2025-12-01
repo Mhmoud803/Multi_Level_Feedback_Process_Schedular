@@ -10,7 +10,7 @@ public class MLFQTest {
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("╔════════════════════════════════════════════════╗");
-        System.out.println("║   MLFQ Scheduler - Test Harness               ║");
+        System.out.println("║   MLFQ Scheduler                               ║");
         System.out.println("╚════════════════════════════════════════════════╝\n");
 
         List<Process> processes = customInput(scanner);
@@ -32,7 +32,6 @@ public class MLFQTest {
     }
 
     private static List<Process> customInput(Scanner scanner) {
-        System.out.println("\n[Test 7: Custom Input]");
         System.out.print("Enter number of processes: ");
         int n = scanner.nextInt();
         scanner.nextLine();

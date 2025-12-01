@@ -1,11 +1,12 @@
 package mlfq;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 public class MLFQScheduler {
-    private ProcessQueue[] queues;
-    private List<Process> allProcesses;
+    private Queue<Process>[] queues;
+    private LinkedList<Process> allProcesses;
     private int currentTime;
     private int contextSwitches;
     private int lastBoostTime;
@@ -14,12 +15,13 @@ public class MLFQScheduler {
     private static final int BOOST_INTERVAL = 20;
 
     public MLFQScheduler(List<Process> processes) {
-        this.queues = new ProcessQueue[3];
-        this.queues[0] = new ProcessQueue(0);
-        this.queues[1] = new ProcessQueue(1);
-        this.queues[2] = new ProcessQueue(2);
+        Queue<Process>[] q = (Queue<Process>[]) new LinkedList[3];
+        this.queues = q;
+        this.queues[0] = new LinkedList<>();
+        this.queues[1] = new LinkedList<>();
+        this.queues[2] = new LinkedList<>();
 
-        this.allProcesses = new ArrayList<>(processes);
+        this.allProcesses = new LinkedList<>(processes);
         this.currentTime = 0;
         this.contextSwitches = 0;
         this.lastBoostTime = 0;
@@ -38,13 +40,11 @@ public class MLFQScheduler {
 
             handleArrivals();
 
-            Process nextProcess = selectNextProcess();
-
-            if (nextProcess != currentProcess) {
-                if (nextProcess != null) {
+            if (currentProcess == null) {
+                currentProcess = selectNextProcess();
+                if (currentProcess != null) {
                     contextSwitches++;
                 }
-                currentProcess = nextProcess;
             }
 
             if (currentProcess != null) {
@@ -63,11 +63,11 @@ public class MLFQScheduler {
     private void handleArrivals() {
         for (Process p : allProcesses) {
             if (p.arrival == currentTime) {
-                queues[0].enqueue(p);
+                queues[0].offer(p);
                 p.currentQueue = 0;
 
                 if (currentProcess != null && currentProcess.currentQueue > 0) {
-                    queues[currentProcess.currentQueue].enqueue(currentProcess);
+                    queues[currentProcess.currentQueue].offer(currentProcess);
                     currentProcess = null;
                 }
             }
@@ -78,7 +78,7 @@ public class MLFQScheduler {
 
         for (int i = 0; i < 3; i++) {
             if (!queues[i].isEmpty()) {
-                return queues[i].dequeue();
+                return queues[i].poll();
             }
         }
         return null;
@@ -95,22 +95,17 @@ public class MLFQScheduler {
         } else if (p.isQuantumExhausted()) {
 
             p.demote();
-            queues[p.currentQueue].enqueue(p);
-            currentProcess = null;
-        } else if (p.currentQueue < 2) {
-
-            queues[p.currentQueue].enqueue(p);
+            queues[p.currentQueue].offer(p);
             currentProcess = null;
         }
-
     }
 
     private void performPriorityBoost() {
 
-        List<Process> toBoost = new ArrayList<>();
+        LinkedList<Process> toBoost = new LinkedList<>();
 
         for (int i = 1; i < 3; i++) {
-            toBoost.addAll(queues[i].getAllProcesses());
+            toBoost.addAll(queues[i]);
             queues[i].clear();
         }
 
@@ -121,7 +116,7 @@ public class MLFQScheduler {
 
         for (Process p : toBoost) {
             p.boost();
-            queues[0].enqueue(p);
+            queues[0].offer(p);
         }
 
         if (!toBoost.isEmpty()) {
