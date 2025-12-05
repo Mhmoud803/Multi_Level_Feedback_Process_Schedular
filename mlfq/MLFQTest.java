@@ -39,9 +39,8 @@ public class MLFQTest {
         List<Process> processes = new ArrayList<>();
 
         for (int i = 0; i < n; i++) {
-            System.out.println("\nProcess " + (i + 1) + ":");
-            System.out.print("  Name: ");
-            String name = scanner.nextLine();
+            String name = "P" + (i + 1);
+            System.out.println("\nProcess " + name + ":");
             System.out.print("  Arrival time: ");
             int arrival = scanner.nextInt();
             System.out.print("  Burst time: ");

@@ -92,12 +92,40 @@ public class MLFQScheduler {
 
             p.completion = currentTime;
             currentProcess = null;
+            printProcessStatuses(p);
         } else if (p.isQuantumExhausted()) {
 
             p.demote();
             queues[p.currentQueue].offer(p);
             currentProcess = null;
         }
+    }
+
+    private boolean isInQueues(Process p) {
+        for (Queue<Process> queue : queues) {
+            if (queue.contains(p))
+                return true;
+        }
+        return false;
+    }
+
+    private void printProcessStatuses(Process completedProcess) {
+        System.out.println("[Time " + currentTime + "] Process '" + completedProcess.name + "' completed. Statuses:");
+        for (Process p : allProcesses) {
+            String status;
+            if (p.remaining == 0) {
+                status = "terminated";
+            } else if (p == currentProcess) {
+                status = "running";
+            } else if (isInQueues(p)) {
+                status = "ready";
+            } else {
+                status = "waiting";
+            }
+
+            System.out.println(String.format("  %-10s : %s", p.name, status));
+        }
+        System.out.println();
     }
 
     private void performPriorityBoost() {
@@ -141,15 +169,6 @@ public class MLFQScheduler {
             }
         }
         return true;
-    }
-
-    private boolean hasRemainingProcesses() {
-        for (Process p : allProcesses) {
-            if (p.arrival > currentTime) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private void calculateMetrics() {
